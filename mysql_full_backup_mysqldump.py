@@ -20,12 +20,7 @@ def arg_parse():
     #parser.add_help
     return parser.parse_args()
 
-def binlog_backup():
-    file_list=[]
-    os.chdir(datadir)
-    file=open('mysql-bin.index','r')
-    for line in file:
-        file_list.append(line)
+
 
 def backup_info_log(log):
     logger = logging.getLogger('mysql_backup')
