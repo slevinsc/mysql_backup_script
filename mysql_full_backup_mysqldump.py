@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #coding:utf-8
 import time,argparse,os,sys
 import MySQLdb,logging,subprocess,shlex
@@ -5,6 +6,7 @@ os.environ['PYTHON_EGG_CACHE'] = '/tmp/.python-eggs'
 backup_date_time=time.strftime("%Y_%m_%d_%H_%M_%S")
 backup_command='/usr/bin/mysqldump'
 backup_log='/var/log/mysql_backup.log'
+datadir='/usr/local/mysql/data'
 
 def arg_parse():
     parser = argparse.ArgumentParser()
@@ -17,6 +19,14 @@ def arg_parse():
     parser.add_argument("-s", help="Specified mysql sock",default='/var/run/mysqld/mysqld.sock')
     #parser.add_help
     return parser.parse_args()
+
+def binlog_backup():
+    file_list=[]
+    os.chdir(datadir)
+    file=open('mysql-bin.index','r')
+    for line in file:
+        file_list.append(line)
+
 def backup_info_log(log):
     logger = logging.getLogger('mysql_backup')
     logger.setLevel(logging.DEBUG)
@@ -74,7 +84,7 @@ def get_binlog_pos(args):
 def exec_backup(args):
     backup_sql="{0}/{1}.sql".format(args.d,args.B)
     backup_file="{0}_{1}.tar.gz".format(args.B,backup_date_time)
-    cmd="{0} -u{1} -p{2} --flush-logs --opt --add-drop-database --databases {3}".format(backup_command,args.u,args.p,args.B)
+    cmd="{0} -h {1} -u{2} -p{3} --flush-logs --opt --add-drop-database --databases {4}".format(backup_command,args.H,args.u,args.p,args.B)
     ##print cmd
     backup_cmd=shlex.split(cmd)
     #try:
@@ -92,7 +102,7 @@ def exec_backup(args):
             rm_dbsql="rm -rf {0}/{1}.sql".format(args.d,args.B)
             subprocess.call(rm_dbsql.split(' '))
             binlog_file,binlog_pos=get_binlog_pos(args)
-            log="mysql backup sucess  binlog={0}  pos={1}".format(binlog_file,binlog_pos)
+            log="mysql backup sucess binlog={0} pos={1}".format(binlog_file,binlog_pos)
             backup_info_log(log)
         else:
             #print output.stderr.readline().decode()
